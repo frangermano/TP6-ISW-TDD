@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "macros.html" import error_de, error_general, marcar %}
+{% block titulo %}Inscripción a {{ reserva.actividad }} · EcoHarmony Park{% endblock %}
+{% block contenido %}
+<section class="tarjeta">
+  <h1>Inscripción a {{ reserva.actividad }}</h1>
+  <p class="turno-elegido">
+    {{ horario.strftime("%d/%m/%Y") }} a las {{ horario.strftime("%H:%M") }} hs
+    · {{ cantidad }} persona{{ "s" if cantidad != 1 }}
+  </p>
+  <p class="ayuda"><a href="{{ url_for('inicio', **reserva) }}">cambiar turno o cantidad</a></p>
+  {{ error_general(error) }}
+
+  <form method="post" action="{{ url_for('confirmar') }}" class="formulario">
+    <input type="hidden" name="actividad" value="{{ reserva.actividad }}">
+    <input type="hidden" name="fecha" value="{{ reserva.fecha }}">
+    <input type="hidden" name="hora" value="{{ reserva.hora }}">
+    <input type="hidden" name="cantidad" value="{{ reserva.cantidad }}">
+
+    {% set nombres = valores.getlist('nombre') %}
+    {% set dnis = valores.getlist('dni') %}
+    {% set edades = valores.getlist('edad') %}
+    {% set talles_elegidos = valores.getlist('talle') %}
+    {% for i in range(cantidad) %}
+    <fieldset>
+      <legend>Visitante {{ i + 1 }}</legend>
+      <label for="nombre-{{ i }}">Nombre y apellido</label>
+      <input type="text" id="nombre-{{ i }}" name="nombre" value="{{ nombres[i] }}"
+             {{ marcar("nombre-" ~ i, error) }}>
+      {{ error_de("nombre-" ~ i, error) }}
+
+      <div class="fila">
+        <div>
+          <label for="dni-{{ i }}">DNI</label>
+          <input type="text" id="dni-{{ i }}" name="dni" inputmode="numeric"
+                 placeholder="Sin puntos" value="{{ dnis[i] }}"
+                 {{ marcar("dni-" ~ i, error) }}>
+          {{ error_de("dni-" ~ i, error) }}
+        </div>
+        <div>
+          <label for="edad-{{ i }}">Edad</label>
+          <input type="text" id="edad-{{ i }}" name="edad" inputmode="numeric"
+                 value="{{ edades[i] }}" {{ marcar("edad-" ~ i, error) }}>
+          {{ error_de("edad-" ~ i, error) }}
+        </div>
+      </div>
+
+      {% if requiere_talle %}
+      <label for="talle-{{ i }}">Talle de vestimenta</label>
+      <select id="talle-{{ i }}" name="talle" {{ marcar("talle-" ~ i, error) }}>
+        <option value="">Elegí un talle</option>
+        {% for talle in talles %}
+        <option value="{{ talle }}" {{ "selected" if talles_elegidos[i] == talle }}>{{ talle }}</option>
+        {% endfor %}
+      </select>
+      {{ error_de("talle-" ~ i, error) }}
+      {% else %}
+      <input type="hidden" name="talle" value="">
+      {% endif %}
+    </fieldset>
+    {% endfor %}
+
+    <fieldset>
+      <legend>Términos y condiciones</legend>
+      <p class="terminos">{{ terminos }}</p>
+      <label class="check">
+        <input type="checkbox" name="acepta_terminos" value="si"
+               {{ "checked" if valores.get('acepta_terminos') }}
+               {{ marcar("terminos", error) }}>
+        Leí y acepto los términos y condiciones de {{ reserva.actividad }}
+      </label>
+      {{ error_de("terminos", error) }}
+    </fieldset>
+
+    <button type="submit" class="boton">Confirmar inscripción</button>
+  </form>
+</section>
+{% endblock %}
